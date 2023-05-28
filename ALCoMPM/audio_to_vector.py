@@ -1,9 +1,3 @@
-# google colab 환경에서 작업
-from google.colab import drive
-drive.mount('/content/drive')
-
-cd /content/drive/MyDrive/Colab Notebooks/
-
 import os
 import shutil
 import pandas as pd
@@ -11,7 +5,11 @@ import librosa
 import numpy as np
 from tqdm import tqdm  
 
-# 전처리에서의 편의를 위해 오디오 파일만 따로 담은 'audio' directory 만들기
+from google.colab import drive
+drive.mount('/content/drive')
+cd /content/drive/MyDrive/Colab Notebooks/
+
+# 'audio' directory for audio data only
 path = "KEMDy20_v1_1/wav"
 os.mkdir('audio')
 datafile_list = os.listdir(path)
@@ -22,29 +20,25 @@ for f_name in datafile_list:
   else:
     pass
 
-#-----------------------------------------전처리 함수--------------------------------------------#
+#-----------------------------------------raw audio preprocessing function--------------------------------------------#
 
-# 음성정보 배열로 처리하는 함수
+# conversion raw audio to array 
 def load_wav(wav_path):
   wav, _ = librosa.load(wav_path, sr=8000)
   return wav
 
-# 오디오 전처리하는 함수
 def preprocess_audio(csv):
   
   df = pd.read_csv(csv)
   seg_id = list(df['Segment ID'][1:])
-  
-  # 모아야 할 정보
+ 
   speaker = []
   audio = []
-
-  # 오디오 담기(csv 파일에 있는 seg id 순서대로)
+  
   for segment in tqdm(seg_id):
     wav = load_wav('audio/'+segment+'.wav')  
     audio.append(wav)
-  
-  # 스크립트 구분(세션번호 + 스크립트번호), 화자 이름 담기
+ 
   script_id = []
 
   for id in seg_id:
@@ -52,13 +46,95 @@ def preprocess_audio(csv):
     script_id.append(id[0] + '_' + id[1])
     speaker.append(id[2])
 
-  return seg_id, script_id, speaker, audio  # 리스트 출력, 정확히 담화 순서대로 담겨있음
+  return seg_id, script_id, speaker, audio  
 
-#------------------------------------------전처리 함수--------------------------------------------#    
+#--------------------------------------------------------------------------------------------------------------------#    
 
+# total data collection
 total_seg_id = []
 total_script_id = []
 total_speaker = []
 total_audio = []
+
+csv_list = sorted(os.listdir('KEMDy20_v1_1/annotation/'))
+
+for csv_path in csv_list:
+  seg_id, script_id, speaker, audio = preprocess_audio('KEMDy20_v1_1/annotation/'+csv_path)
+  total_seg_id += seg_id 
+  total_script_id += script_id
+  total_speaker += speaker 
+  total_audio += audio
+  
+# audio vectorizing with pretrained Wav2Vec2 model 
+!pip install transformers
+from transformers import Wav2Vec2Model, Wav2Vec2Processor
+import torch
+
+# convert audio array(list) to tensor type
+audio_ds = []
+for wav in tqdm(total_audio):
+  w = torch.FloatTensor(wav)
+  audio_ds.append(w)
+
+# pretrained Wav2Vec2 
+processor = Wav2Vec2Processor.from_pretrained("kresnik/wav2vec2-large-xlsr-korean")
+encoder = Wav2Vec2Model.from_pretrained("kresnik/wav2vec2-large-xlsr-korean")
+
+#-------------------------------------------------function for vector extraction----------------------------------------------------#
+# wav data encoding using wav2vec2 model
+def encoding(wav_arr, processor = None, encoder = None, return_hidden_state=False):
+    
+    assert bool(processor) == bool(encoder)
+    
+    inputs = processor(wav_arr,
+                       sampling_rate=16000,
+                       return_attention_mask=True,
+                       return_tensors="pt")
+    
+    Inputs = inputs.to('cuda')
+    Encoder = encoder.to('cuda')
+    outputs = encoder(output_hidden_states=return_hidden_state, **inputs)
+
+    return outputs
+
+# hidden, feature vector extraction
+def extract_vector(data):
+  with torch.no_grad():
+    encoded = encoding(data, processor = processor, encoder = encoder, return_hidden_state=True)  # encoding 함수 사용
+
+    hidden_vec = encoded.last_hidden_state.mean(dim=1).tolist()                                                         
+    feature_vec = encoded.extract_features.mean(dim=1).tolist()
+
+    return hidden_vec, feature_vec
+
+#-----------------------------------------------------------------------------------------------------------------------------------#  
+
+# hidden, feature vector
+total_hidden_vector = []
+total_feature_vector = []
+
+for wav in tqdm(audio_ds):
+  hidden, feature = extract_vector(wav)
+  total_hidden_vector.append(hidden)
+  total_feature_vector.append(feature)
+  
+# dictionary containing all audio information
+total_dataset = {'seg_ID': total_seg_id,
+                 'script_id': total_script_id,
+                 'speaker': total_speaker,
+                 'hidden_vector': total_hidden_vector,
+                 'feature_vector': total_feature_vector}
+
+# convert dataset to json file
+import json
+with open('total_dataset.json', 'w') as f : 
+	json.dump(total_dataset, f)
+
+
+
+
+
+
+
 
 
