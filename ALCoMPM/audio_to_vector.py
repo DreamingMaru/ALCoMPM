@@ -4,21 +4,24 @@ import pandas as pd
 import librosa
 import numpy as np
 from tqdm import tqdm  
-
 from google.colab import drive
+
 drive.mount('/content/drive')
 cd /content/drive/MyDrive/Colab Notebooks/
 
-# 'audio' directory for audio data only
+# making 'audio' directory for only audio data collection (for conveinence)
 path = "KEMDy20_v1_1/wav"
 os.mkdir('audio')
-datafile_list = os.listdir(path)
+session_list = sorted(os.listdir(path))
 
-for f_name in datafile_list:
-  if 'wav' in f_name:
-    shutil.move(path + f_name, 'audio' + f_name)
-  else:
-    pass
+for session in session_list:
+  data_list = sorted(os.listdir(path + session))
+
+  for f_name in data_list:		
+    if 'wav' in f_name:
+      shutil.move(path + f_name, 'audio' + f_name)
+    else:
+      pass
 
 #-----------------------------------------raw audio preprocessing function--------------------------------------------#
 
