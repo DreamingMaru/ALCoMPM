@@ -21,7 +21,7 @@ ALCoMPM
     │   ├── text_dev.txt
     │   ├── text_test.txt
     │   └── text_train.txt
-    ├── alcompm.py # 저희 모델입니다. 이 파일을 실행시켜주시면 됩니다.
+    ├── alcompm.py # 저희 모델입니다. 최종적으로 이 파일을 실행시켜주시면 됩니다.
     ├── audio_to_vector.py # audio 데이터를 vector로 변환하는 코드입니다. data-generator 코드실행 이후 이 코드를 실행시켜주세요.
     ├── com.py # CoMPM modules
     ├── compm.py # CoMPM modules
