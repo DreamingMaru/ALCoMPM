@@ -1,4 +1,4 @@
-# DATA
+# Data
 Multimodal Emotion Recognition in Conversation(MERC)
 - Data: [KEMDy19](https://nanum.etri.re.kr/share/kjnoh/KEMDy19?lang=ko_KR)
 
