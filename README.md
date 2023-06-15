@@ -15,14 +15,14 @@ Multimodal Emotion Recognition in Conversation(MERC)
 ALCoMPM
 └── ALCoMPM
     ├── data-generator
-    │   ├── text-audio-data-generator .py # ALCoMPM에 KEMDy19 데이터를 넣기 위해 .txt 형태로 generate하는 코드입니다. 먼저 실행시켜주세요.
-    │   └── text-data-generator.py # CoMPM에 KEMDy19 데이터를 넣기 위해 .txt 형태로 generate하는 코드입니다. 먼저 실행시켜주세요.
+    │   ├── text-audio-data-generator .py 
+    │   └── text-data-generator.py 
     ├── data
     │   ├── text_dev.txt
     │   ├── text_test.txt
     │   └── text_train.txt
-    ├── alcompm.py # 저희 모델입니다. 최종적으로 이 파일을 실행시켜주시면 됩니다.
-    ├── audio_to_vector.py # audio 데이터를 vector로 변환하는 코드입니다. data-generator 코드실행 이후 이 코드를 실행시켜주세요.
+    ├── alcompm.py 
+    ├── audio_to_vector.py 
     ├── com.py # CoMPM modules
     ├── compm.py # CoMPM modules
     └── pm.py # CoMPM modules
